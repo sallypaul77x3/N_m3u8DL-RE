@@ -1,4 +1,5 @@
-﻿using N_m3u8DL_RE.Parser.Config;
+﻿using N_m3u8DL_CLI;
+using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
@@ -60,6 +61,19 @@ namespace N_m3u8DL_RE.Parser
             var rawType = "txt";
             rawText = rawText.Trim();
             this.rawText = rawText;
+            if (rawText.StartsWith("{\"payload\""))
+            {
+                var path =Directory.GetCurrentDirectory();
+                var iqJsonPath = Path.Combine(path, "iq.json");
+                //输出mpd文件
+                File.WriteAllText(iqJsonPath, rawText);
+                //分析json文件
+                var newUri = IqJsonParser.Parse(path, rawText);
+                parserConfig.OriginalUrl = parserConfig.Url = newUri;
+                
+                rawText = File.ReadAllText(new Uri(newUri).LocalPath);
+                this.rawText = rawText;
+            }
             if (rawText.StartsWith(HLSTags.ext_m3u))
             {
                 Logger.InfoMarkUp(ResString.matchHLS);

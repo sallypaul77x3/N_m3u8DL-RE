@@ -13,4 +13,8 @@
     <ProjectReference Include="..\N_m3u8DL-RE.Common\N_m3u8DL-RE.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
 </Project>
