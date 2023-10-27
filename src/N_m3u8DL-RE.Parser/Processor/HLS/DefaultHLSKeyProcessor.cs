@@ -28,6 +28,10 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             Logger.Debug("METHOD:{},URI:{},IV:{}", method, uri, iv);
 
             var encryptInfo = new EncryptInfo(method);
+            if (method=="SAMPLE-AES")
+            {
+                return encryptInfo;
+            }
 
             //IV
             if (!string.IsNullOrEmpty(iv))
