@@ -253,6 +253,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             {
                 if (string.IsNullOrEmpty(line))
                     continue;
+                isAd=false;
 
                 //只下载部分字节
                 if (line.StartsWith(HLSTags.ext_x_byterange))
@@ -262,6 +263,15 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     segment.ExpectLength = n;
                     segment.StartRange = o ?? segments.Last().StartRange + segments.Last().ExpectLength;
                     expectSegment = true;
+                }
+                else if (line.Contains("ccode=") && line.Contains("/ad/") && line.Contains("duration="))
+                {
+                    isAd = true;
+                }
+                //优酷广告(4K分辨率测试)
+                else if (line.Contains("ccode=0902") && line.Contains("duration="))
+                {
+                    isAd = true;
                 }
                 //国家地理去广告
                 else if (line.StartsWith("#UPLYNK-SEGMENT"))
