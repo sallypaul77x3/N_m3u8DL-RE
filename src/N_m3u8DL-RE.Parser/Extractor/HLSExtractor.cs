@@ -394,6 +394,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             playlist.MediaInit.EncryptInfo.IV = currentEncryptInfo.IV ?? HexUtil.HexToBytes(Convert.ToString(segIndex, 16).PadLeft(32, '0'));
                         }
                     }
+                    else if (line.Contains("vkey="))
+                    {
+                        continue;
+                    }
                     //遇到了其他的map，说明已经不是一个视频了，全部丢弃即可
                     else
                     {
