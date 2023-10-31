@@ -13,6 +13,9 @@ using N_m3u8DL_RE.Util;
 using Spectre.Console;
 using System.Collections.Concurrent;
 using System.Text;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using NiL.JS.Statements;
 
 namespace N_m3u8DL_RE.DownloadManager
 {
@@ -153,43 +156,65 @@ namespace N_m3u8DL_RE.DownloadManager
                     DownloaderConfig.MyOptions.BinaryMerge = true;
                     Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge}[/]");
                 }
-
-                var path = Path.Combine(tmpDir, "_init.mp4.tmp");
-                var result = await Downloader.DownloadSegmentAsync(streamSpec.Playlist.MediaInit, path, speedContainer, headers);
-                FileDic[streamSpec.Playlist.MediaInit] = result;
-                if (result == null || !result.Success)
+                while(true)
                 {
-                    throw new Exception("Download init file failed!");
-                }
-                mp4InitFile = result.ActualFilePath;
-                task.Increment(1);
-
-                //读取mp4信息
-                if (result != null && result.Success) 
-                {
-                    currentKID = MP4DecryptUtil.ReadInit(result.ActualFilePath);
-                    //从文件读取KEY
-                    await SearchKeyAsync(currentKID);
-                    //实时解密
-                    if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && !string.IsNullOrEmpty(currentKID) && StreamExtractor.ExtractorType != ExtractorType.MSS)
+                    
+                    var path = Path.Combine(tmpDir, "_init.mp4.tmp");
+                    var result = await Downloader.DownloadSegmentAsync(streamSpec.Playlist.MediaInit, path, speedContainer, headers);
+                    FileDic[streamSpec.Playlist.MediaInit] = result;
+                    //读取文件前 判断是否等于var videoUrl=
+                    if (result != null && result.Success && !readInfo)
                     {
-                        var enc = result.ActualFilePath;
-                        var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
-                        var dResult = await MP4DecryptUtil.DecryptAsync(DownloaderConfig.MyOptions.UseShakaPackager, mp4decrypt, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID);
-                        if (dResult)
+                        var content = await File.ReadAllTextAsync(result.ActualFilePath);
+                        if (content.StartsWith("var videoUrl="))
                         {
-                            FileDic[streamSpec.Playlist.MediaInit]!.ActualFilePath = dec;
+                            string pattern = "\"l\":\"(.*?)\"";
+                            Match match = Regex.Match(content, pattern);
+
+                            if (match.Success)
+                            {
+                                string videoUrl = match.Groups[1].Value;
+                                streamSpec.Playlist.MediaInit.Url = videoUrl;
+                                File.Delete(result.ActualFilePath);
+                                continue;
+                            }
+                            
                         }
                     }
-                    //ffmpeg读取信息
-                    if (!readInfo)
+                    if (result == null || !result.Success)
                     {
-                        Logger.WarnMarkUp(ResString.readingInfo);
-                        mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result.ActualFilePath);
-                        mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
-                        ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
-                        readInfo = true;
+                        throw new Exception("Download init file failed!");
                     }
+                    mp4InitFile = result.ActualFilePath;
+                    task.Increment(1);
+                    //读取mp4信息
+                    if (result != null && result.Success) 
+                    {
+                        currentKID = MP4DecryptUtil.ReadInit(result.ActualFilePath);
+                        //从文件读取KEY
+                        await SearchKeyAsync(currentKID);
+                        //实时解密
+                        if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && !string.IsNullOrEmpty(currentKID) && StreamExtractor.ExtractorType != ExtractorType.MSS)
+                        {
+                            var enc = result.ActualFilePath;
+                            var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
+                            var dResult = await MP4DecryptUtil.DecryptAsync(DownloaderConfig.MyOptions.UseShakaPackager, mp4decrypt, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID);
+                            if (dResult)
+                            {
+                                FileDic[streamSpec.Playlist.MediaInit]!.ActualFilePath = dec;
+                            }
+                        }
+                        //ffmpeg读取信息
+                        if (!readInfo)
+                        {
+                            Logger.WarnMarkUp(ResString.readingInfo);
+                            mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result.ActualFilePath);
+                            mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
+                            ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
+                            readInfo = true;
+                        }
+                    }
+                    break;
                 }
             }
 
