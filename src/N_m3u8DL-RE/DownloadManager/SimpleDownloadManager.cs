@@ -317,7 +317,11 @@ namespace N_m3u8DL_RE.DownloadManager
             //修改输出后缀
             var outputExt = "." + streamSpec.Extension;
             if (streamSpec.Extension == null) outputExt = ".ts";
-            else if (streamSpec.MediaType == MediaType.AUDIO && (streamSpec.Extension == "m4s" || streamSpec.Extension == "mp4")) outputExt = "_"+streamSpec.GroupId+".m4a"";
+            else if (streamSpec.MediaType == MediaType.AUDIO &&
+                     (streamSpec.Extension == "m4s" || streamSpec.Extension == "mp4"))
+            {
+                outputExt = "_"+streamSpec.GroupId+".m4a";
+            }
             else if (streamSpec.MediaType != MediaType.SUBTITLES && (streamSpec.Extension == "m4s" || streamSpec.Extension == "mp4")) outputExt = ".mp4";
 
             if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == MediaType.SUBTITLES)
@@ -615,8 +619,25 @@ namespace N_m3u8DL_RE.DownloadManager
                 var result = await MP4DecryptUtil.DecryptAsync(DownloaderConfig.MyOptions.UseShakaPackager, mp4decrypt, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID);
                 if (result)
                 {
-                    File.Delete(enc);
-                    File.Move(dec, enc);
+                    var t = new System.Threading.Thread(() =>
+                     {
+                        while (true)
+                        {
+                            try
+                            {
+                                File.Delete(enc);
+                                Task.Delay(1000).Wait();
+                                File.Move(dec, enc);
+                                break;
+                            }
+                            catch (Exception)
+                            {
+                                System.Threading.Thread.Sleep(1000);
+                            }
+                        }
+                    });
+                    t.Start();
+                    t.Join();
                 }
             }
 
