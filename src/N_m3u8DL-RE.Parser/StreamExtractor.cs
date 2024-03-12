@@ -68,7 +68,7 @@ namespace N_m3u8DL_RE.Parser
                 //输出mpd文件
                 File.WriteAllText(iqJsonPath, rawText);
                 //分析json文件
-                var newUri = IqJsonParser.Parse(path, rawText);
+                var newUri = IqJsonParser.Parse(path+"/cache", rawText);
                 parserConfig.OriginalUrl = parserConfig.Url = newUri;
                 
                 rawText = File.ReadAllText(new Uri(newUri).LocalPath);
