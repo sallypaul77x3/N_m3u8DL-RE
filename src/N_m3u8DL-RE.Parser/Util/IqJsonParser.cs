@@ -38,7 +38,7 @@ namespace N_m3u8DL_CLI
                 sb.AppendLine($"#EXT-CODEC:{jObject["payload"]["wm_a"]["audio_track1"]["codec"].Value<string>()}");
                 sb.AppendLine($"#EXT-KID:{jObject["payload"]["wm_a"]["audio_track1"]["key_id"].Value<string>()}");
                 sb.AppendLine($"#EXT-X-MAP:URI=\"{new Uri(Path.Combine(downDir + "(Audio)", "iqAudioInit.mp4")).ToString()}\"");
-                sb.AppendLine("#EXT-X-KEY:METHOD=PLZ-KEEP-RAW,URI=\"None\"");
+                //sb.AppendLine("#EXT-X-KEY:METHOD=PLZ-KEEP-RAW,URI=\"None\"");
                 foreach (var a in aClips)
                 {
                     sb.AppendLine($"#EXTINF:{a["duration_second"].ToString()}");
@@ -67,7 +67,7 @@ namespace N_m3u8DL_CLI
                 sb.AppendLine($"#EXT-CODEC:{jObject["payload"]["wm_a"]["video_track1"]["codec"].Value<string>()}");
                 sb.AppendLine($"#EXT-KID:{jObject["payload"]["wm_a"]["video_track1"]["key_id"].Value<string>()}");
                 sb.AppendLine($"#EXT-X-MAP:URI=\"{new Uri(videoInitPath).ToString()}\"");
-                sb.AppendLine("#EXT-X-KEY:METHOD=PLZ-KEEP-RAW,URI=\"None\"");
+                //sb.AppendLine("#EXT-X-KEY:METHOD=PLZ-KEEP-RAW,URI=\"None\"");
                 foreach (var a in vClips)
                 {
                     var start = a["seekable"]["pos_start"].Value<long>();
