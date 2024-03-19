@@ -41,6 +41,13 @@ namespace N_m3u8DL_RE.Util
             var splitSegments = new List<MediaSegment>();
             foreach (Clip clip in allClips)
             {
+                if (clip.to == -1)
+                {
+                    if (url.Contains(".vcdn."))
+                    {
+                        clip.to = fileSize - 1;
+                    }
+                }
                 splitSegments.Add(new MediaSegment()
                 {
                     Index = clip.index,
